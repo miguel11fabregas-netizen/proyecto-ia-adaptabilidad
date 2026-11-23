@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Probar modelos de aprendizaje automático</title>
+
+<!-- =====================================================
+     PARTE 1: ESTILOS (CSS)
+     Solo cambian el aspecto: colores, tamaños y espacios.
+     ===================================================== -->
+<style>
+  body { font-family: Arial, sans-serif; background: #f3f5f8; color: #222; margin: 0; }
+  .contenedor { max-width: 800px; margin: 0 auto; padding: 20px; }
+  .tarjeta { background: white; border: 1px solid #ccc; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+
+  /* Botones de las pestañas */
+  .pestanas button { padding: 10px 16px; border: 1px solid #ccc; background: #eee; cursor: pointer; font-size: 16px; }
+  .pestanas button.activa { background: #2457c5; color: white; }
+
+  /* Botones para elegir entre subir foto o usar cámara */
+  .modos { margin-bottom: 12px; }
+  .modos button { padding: 8px 14px; border: 1px solid #ccc; background: #eee; cursor: pointer; font-size: 15px; }
+  .modos button.activa { background: #2457c5; color: white; }
+
+  /* Video de la cámara */
+  video { width: 100%; max-height: 300px; background: black; }
+
+  /* Formulario */
+  label { display: block; margin-top: 10px; }
+  select { width: 100%; padding: 6px; margin-top: 4px; font-size: 15px; }
+  .boton { margin-top: 16px; padding: 10px 16px; background: #2457c5; color: white; border: 0; border-radius: 6px; font-size: 16px; cursor: pointer; }
+
+  /* Imagen de vista previa y resultados */
+  img { max-width: 100%; max-height: 300px; margin-top: 12px; }
+  .resultado { font-size: 20px; font-weight: bold; margin-top: 12px; }
+  .error { color: #b3382c; }
+
+  /* Para ocultar un panel */
+  .oculto { display: none; }
+</style>
+</head>
+
+<body>
+<div class="contenedor">
+
+  <h1>Probar modelos de aprendizaje automático</h1>
+
+  <!-- =====================================================
+       PARTE 2: PESTAÑAS
+       Dos botones para cambiar entre los dos modelos.
+       ===================================================== -->
+  <div class="pestanas">
+    <button id="boton-perros" class="activa" onclick="mostrarPanel('perros')">Perros y gatos</button>
+    <button id="boton-estudiante" onclick="mostrarPanel('estudiante')">Adaptabilidad del estudiante</button>
+  </div>
+
+  <!-- =====================================================
+       PARTE 3: MODELO 1 - PERROS Y GATOS
+       El usuario elige una foto y la página muestra el resultado.
+       ===================================================== -->
+  <div id="panel-perros" class="tarjeta">
+    <h2>¿Perro o gato?</h2>
+
+    <!-- Dos botones para elegir cómo enviar la imagen -->
+    <div class="modos">
+      <button id="boton-subir" class="activa" onclick="elegirModo('subir')">Subir foto</button>
+      <button id="boton-camara" onclick="elegirModo('camara')">Usar cámara</button>
+    </div>
+
+    <!-- OPCIÓN A: subir una foto.
+         Selector de archivo: cuando se elige una foto se ejecuta analizarFoto() -->
+    <div id="bloque-subir">
+      <input type="file" id="foto" accept="image/*" onchange="analizarFoto()">
+    </div>
+
+    <!-- OPCIÓN B: usar la cámara.
+         El <video> muestra lo que ve la cámara en vivo. -->
+    <div id="bloque-camara" class="oculto">
+      <video id="video" autoplay playsinline muted></video>
+      <br>
+      <button class="boton" onclick="encenderCamara()">Activar cámara</button>
+      <button class="boton" onclick="tomarFoto()">Tomar foto y analizar</button>
+      <p>La cámara solo funciona si la página se abre con https o desde tu propio computador.</p>
+    </div>
+
+    <!-- Aquí se muestra la imagen que se analiza -->
+    <img id="vista-previa" class="oculto" alt="Imagen que se analiza">
+
+    <!-- Aquí se escribe el resultado -->
+    <div id="resultado-perros" class="resultado"></div>
+  </div>
+
+  <!-- =====================================================
+       PARTE 4: MODELO 2 - ADAPTABILIDAD DEL ESTUDIANTE
+       Un formulario con 13 preguntas. Cada select tiene un "name"
+       que coincide con el nombre de la columna del modelo.
+       Lo que se ve (texto) es en español; el "value" es lo que
+       entiende el modelo (no lo cambies).
+       ===================================================== -->
+  <div id="panel-estudiante" class="tarjeta oculto">
+    <h2>Datos del estudiante</h2>
+
+    <label>Género
+      <select id="Gender">
+        <option value="Boy">Niño / hombre</option>
+        <option value="Girl">Niña / mujer</option>
+      </select>
+    </label>
+
+    <label>Rango de edad
+      <select id="Age">
+        <option value="1-5">1 a 5 años</option>
+        <option value="6-10">6 a 10 años</option>
+        <option value="11-15">11 a 15 años</option>
+        <option value="16-20">16 a 20 años</option>
+        <option value="21-25">21 a 25 años</option>
+        <option value="26-30">26 a 30 años</option>
+      </select>
+    </label>
+
+    <label>Nivel educativo
+      <select id="Education Level">
+        <option value="School">Escuela</option>
+        <option value="College">Colegio</option>
+        <option value="University">Universidad</option>
+      </select>
+    </label>
+
+    <label>Tipo de institución
+      <select id="Institution Type">
+        <option value="Government">Pública</option>
+        <option value="Non Government">Privada</option>
+      </select>
+    </label>
+
+    <label>Estudia informática
+      <select id="IT Student">
+        <option value="Yes">Sí</option>
+        <option value="No">No</option>
+      </select>
+    </label>
+
+    <label>Vive en la ciudad
+      <select id="Location">
+        <option value="Yes">Sí</option>
+        <option value="No">No</option>
+      </select>
+    </label>
+
+    <label>Cortes de electricidad
+      <select id="Load-shedding">
+        <option value="Low">Pocos</option>
+        <option value="High">Muchos</option>
+      </select>
+    </label>
+
+    <label>Situación económica
+      <select id="Financial Condition">
+        <option value="Poor">Baja</option>
+        <option value="Mid">Media</option>
+        <option value="Rich">Alta</option>
+      </select>
+    </label>
+
+    <label>Tipo de internet
+      <select id="Internet Type">
+        <option value="Wifi">Wi-Fi</option>
+        <option value="Mobile Data">Datos móviles</option>
+      </select>
+    </label>
+
+    <label>Tipo de red
+      <select id="Network Type">
+        <option value="2G">2G</option>
+        <option value="3G">3G</option>
+        <option value="4G">4G</option>
+      </select>
+    </label>
+
+    <label>Horas de clase al día
+      <select id="Class Duration">
+        <option value="0">Ninguna</option>
+        <option value="1-3">1 a 3 horas</option>
+        <option value="3-6">3 a 6 horas</option>
+      </select>
+    </label>
+
+    <label>La institución tiene plataforma virtual (LMS)
+      <select id="Self Lms">
+        <option value="Yes">Sí</option>
+        <option value="No">No</option>
+      </select>
+    </label>
+
+    <label>Dispositivo principal
+      <select id="Device">
+        <option value="Computer">Computadora</option>
+        <option value="Tab">Tableta</option>
+        <option value="Mobile">Celular</option>
+      </select>
+    </label>
+
+    <!-- Al pulsar este botón se ejecuta evaluarEstudiante() -->
+    <button class="boton" onclick="evaluarEstudiante()">Evaluar adaptabilidad</button>
+
+    <!-- Aquí se escribe el resultado -->
+    <div id="resultado-estudiante" class="resultado"></div>
+  </div>
+
+</div>
+
+<!-- =====================================================
+     PARTE 5: PROGRAMA (JavaScript)
+     Aquí está la lógica: qué pasa cuando el usuario hace algo.
+     ===================================================== -->
+<script>
+
+// ---------------------------------------------------------
+// 5.1 DIRECCIÓN DEL SERVIDOR
+// Pega aquí el enlace que te dio ngrok en Colab (entre las comillas),
+// por ejemplo: "https://algo-raro.ngrok-free.dev"
+// IMPORTANTE: sin "/" al final.
+//
+// ¿CÓMO SABE ESTA PÁGINA A DÓNDE LLAMAR?
+// Esta página NO conoce Flask ni Colab. Solo conoce una dirección web:
+//
+//    https://tu-enlace.ngrok-free.dev/api/perros-gatos
+//    └──────────── SERVIDOR ─────────┘└──── RUTA ─────┘
+//
+//  - SERVIDOR: la dirección del "restaurante" (el enlace de ngrok).
+//  - RUTA: el "plato" que pedimos. Debe ser IGUAL a la ruta escrita
+//    en el cuaderno de Colab, en el @app.post('...') de cada función.
+//
+// El recorrido de un pedido es:
+//    esta página -> ngrok -> Flask (en Colab) -> modelo
+//    y la respuesta regresa por el mismo camino.
+//
+// Para que todo funcione, estas cosas deben coincidir en los dos archivos:
+//    Aquí (index.html)                    | En el cuaderno de Colab
+//    -------------------------------------|---------------------------------
+//    SERVIDOR + "/api/perros-gatos"       | @app.post('/api/perros-gatos')
+//    SERVIDOR + "/api/adaptabilidad"      | @app.post('/api/adaptabilidad')
+//    paquete.append("imagen", ...)        | request.files['imagen']
+//    method: "POST"                       | @app.post (post = enviar datos)
+//    nombres de las 13 preguntas          | lista COLUMNAS
+//
+// Si cambias uno de estos nombres en un archivo y no en el otro,
+// el servidor responde con un error porque no encuentra "ese plato".
+// ---------------------------------------------------------
+const SERVIDOR = "https://pesky-backup-scarcity.ngrok-free.dev";
+
+// Este encabezado evita que ngrok muestre una pantalla de aviso
+// que bloquearía las respuestas del servidor.
+const ENCABEZADO_NGROK = { "ngrok-skip-browser-warning": "true" };
+
+
+// ---------------------------------------------------------
+// 5.2 CAMBIAR DE PESTAÑA
+// Muestra un panel y oculta el otro.
+// ---------------------------------------------------------
+function mostrarPanel(nombre) {
+  // Ocultar los dos paneles y quitar el color a los dos botones
+  document.getElementById("panel-perros").classList.add("oculto");
+  document.getElementById("panel-estudiante").classList.add("oculto");
+  document.getElementById("boton-perros").classList.remove("activa");
+  document.getElementById("boton-estudiante").classList.remove("activa");
+
+  // Mostrar solo el panel elegido y marcar su botón
+  document.getElementById("panel-" + nombre).classList.remove("oculto");
+  document.getElementById("boton-" + nombre).classList.add("activa");
+
+  // Si salimos de la pestaña de perros y gatos, apagamos la cámara
+  apagarCamara();
+}
+
+
+// ---------------------------------------------------------
+// 5.3 MODELO 1: PERROS Y GATOS
+// Hay dos formas de obtener la imagen: subir una foto o usar la cámara.
+// Las dos terminan llamando a la misma función: enviarImagen()
+// ---------------------------------------------------------
+
+// ----- Elegir entre "Subir foto" y "Usar cámara" -----
+function elegirModo(modo) {
+  // Ocultar los dos bloques y quitar el color a los dos botones
+  document.getElementById("bloque-subir").classList.add("oculto");
+  document.getElementById("bloque-camara").classList.add("oculto");
+  document.getElementById("boton-subir").classList.remove("activa");
+  document.getElementById("boton-camara").classList.remove("activa");
+
+  // Mostrar solo el bloque elegido y marcar su botón
+  document.getElementById("bloque-" + modo).classList.remove("oculto");
+  document.getElementById("boton-" + modo).classList.add("activa");
+
+  // Si volvemos a "Subir foto", apagamos la cámara
+  if (modo === "subir") apagarCamara();
+}
+
+// ----- OPCIÓN A: subir una foto -----
+function analizarFoto() {
+  // Tomar el archivo que eligió el usuario
+  const archivo = document.getElementById("foto").files[0];
+  if (!archivo) return;   // si no eligió nada, no hacemos nada
+
+  enviarImagen(archivo);
+}
+
+// ----- OPCIÓN B: usar la cámara -----
+let flujoCamara = null;   // aquí se guarda la cámara mientras está encendida
+
+// Encender la cámara y mostrarla en el <video>
+async function encenderCamara() {
+  try {
+    flujoCamara = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+    document.getElementById("video").srcObject = flujoCamara;
+  } catch (error) {
+    // Pasa si el usuario niega el permiso o si la página no usa https
+    document.getElementById("resultado-perros").textContent = "No se pudo abrir la cámara. Permite el acceso en el navegador o usa la opción Subir foto.";
+  }
+}
+
+// Apagar la cámara (para que se apague la luz de la cámara)
+function apagarCamara() {
+  if (flujoCamara) {
+    flujoCamara.getTracks().forEach(pista => pista.stop());
+    flujoCamara = null;
+  }
+  document.getElementById("video").srcObject = null;
+}
+
+// Tomar una "captura" de lo que ve la cámara y analizarla
+function tomarFoto() {
+  const video = document.getElementById("video");
+  if (!flujoCamara) return;   // si la cámara no está encendida, no hacemos nada
+
+  // Paso 1: dibujar el cuadro actual del video en un canvas (un "lienzo")
+  const lienzo = document.createElement("canvas");
+  lienzo.width = video.videoWidth;
+  lienzo.height = video.videoHeight;
+  lienzo.getContext("2d").drawImage(video, 0, 0);
+
+  // Paso 2: convertir el lienzo en una imagen (JPG) y enviarla
+  lienzo.toBlob(imagen => enviarImagen(imagen), "image/jpeg", 0.9);
+}
+
+// ----- Enviar la imagen al servidor (la usan las dos opciones) -----
+async function enviarImagen(imagen) {
+  const cajaResultado = document.getElementById("resultado-perros");
+
+  // Paso 1: mostrar la imagen en pantalla
+  const vistaPrevia = document.getElementById("vista-previa");
+  vistaPrevia.src = URL.createObjectURL(imagen);
+  vistaPrevia.classList.remove("oculto");
+  cajaResultado.textContent = "Analizando...";
+
+  // Paso 2: preparar el paquete que se envía.
+  // La imagen va con la etiqueta "imagen": el servidor la busca con ese mismo
+  // nombre en el cuaderno (request.files['imagen']). Si no coinciden, no la encuentra.
+  const paquete = new FormData();
+  paquete.append("imagen", imagen, "foto.jpg");
+
+  try {
+    // Paso 3: enviar la imagen al servidor y esperar la respuesta.
+    // fetch(...) es la instrucción que "llama" al servidor.
+    //  - Dirección: SERVIDOR + ruta  (la ruta debe existir en Flask como
+    //    @app.post('/api/perros-gatos'))
+    //  - method "POST": estamos ENVIANDO datos (la imagen), no solo pidiendo información.
+    const respuesta = await fetch(SERVIDOR + "/api/perros-gatos", {
+      method: "POST",
+      body: paquete,
+      headers: ENCABEZADO_NGROK
+    });
+    // La respuesta del servidor llega en formato JSON. Sus nombres (etiqueta,
+    // confianza, prob_perro...) son los que escribe jsonify(...) en el cuaderno.
+    const datos = await respuesta.json();
+
+    // Paso 4: escribir el resultado
+    const animal = datos.etiqueta === "perro" ? "🐶 Perro" : "🐱 Gato";
+    const porcentaje = (datos.confianza * 100).toFixed(1);
+    cajaResultado.textContent = animal + " (" + porcentaje + " % de confianza)";
+    cajaResultado.classList.remove("error");
+
+  } catch (error) {
+    // Si algo falla (servidor apagado, enlace incorrecto...) avisamos
+    cajaResultado.textContent = "No se pudo conectar con el servidor. Revisa que Colab siga ejecutándose y que el enlace sea el actual.";
+    cajaResultado.classList.add("error");
+  }
+}
+
+
+// ---------------------------------------------------------
+// 5.4 MODELO 2: ADAPTABILIDAD DEL ESTUDIANTE
+// Pasos: leer las respuestas -> enviarlas al servidor -> mostrar la respuesta
+// ---------------------------------------------------------
+
+// Lista con los "id" de las 13 preguntas (los mismos que usa el modelo).
+// Deben ser IGUALES a los nombres de la lista COLUMNAS del cuaderno de Colab.
+const PREGUNTAS = [
+  "Gender", "Age", "Education Level", "Institution Type",
+  "IT Student", "Location", "Load-shedding", "Financial Condition",
+  "Internet Type", "Network Type", "Class Duration", "Self Lms", "Device"
+];
+
+// Traducción del resultado del modelo al español
+const NIVELES = {0: "Alta", 1: "Baja", 2: "Moderada"};
+
+async function evaluarEstudiante() {
+  const cajaResultado = document.getElementById("resultado-estudiante");
+  cajaResultado.textContent = "Evaluando...";
+
+  // Paso 1: leer la respuesta elegida en cada pregunta
+  // y guardarla en un objeto, por ejemplo: { Gender: "Boy", Age: "26-30", ... }
+  const respuestas = {};
+  for (const pregunta of PREGUNTAS) {
+    respuestas[pregunta] = document.getElementById(pregunta).value;
+  }
+
+  try {
+    // Paso 2: enviar las respuestas al servidor en formato JSON.
+    // La ruta debe existir en Flask como @app.post('/api/adaptabilidad').
+    // En el cuaderno, request.get_json() recibe justo este paquete JSON.
+    const respuesta = await fetch(SERVIDOR + "/api/adaptabilidad", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...ENCABEZADO_NGROK },
+      body: JSON.stringify(respuestas)
+    });
+    // Los nombres que llegan (nivel, probabilidades...) son los que escribe
+    // jsonify(...) en la ruta /api/adaptabilidad del cuaderno.
+    const datos = await respuesta.json();
+
+    // Paso 3: escribir el nivel y la probabilidad de cada nivel
+    let texto = "Adaptabilidad: " + NIVELES[datos.nivel];
+    for (const p of datos.probabilidades) {
+      texto += "\n" + NIVELES[p.nivel] + ": " + (p.prob * 100).toFixed(1) + " %";
+    }
+    cajaResultado.style.whiteSpace = "pre-line";   // respeta los saltos de línea
+    cajaResultado.textContent = texto;
+    cajaResultado.classList.remove("error");
+
+  } catch (error) {
+    cajaResultado.textContent = "No se pudo conectar con el servidor. Revisa que Colab siga ejecutándose y que el enlace sea el actual.";
+    cajaResultado.classList.add("error");
+  }
+}
+</script>
+</body>
+</html>
